@@ -20,6 +20,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.config.internals.BrokerSecurityConfigs;
+import org.apache.kafka.common.config.internals.ConfluentConfigs;
 import org.apache.kafka.common.memory.MemoryPool;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.security.JaasContext;
@@ -31,6 +32,7 @@ import org.apache.kafka.common.security.authenticator.SaslClientAuthenticator;
 import org.apache.kafka.common.security.authenticator.SaslServerAuthenticator;
 import org.apache.kafka.common.security.ssl.SslFactory;
 import org.apache.kafka.common.utils.Java;
+import org.apache.kafka.server.interceptor.BrokerInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,7 +164,9 @@ public class SaslChannelBuilder implements ChannelBuilder, ListenerReconfigurabl
                 authenticator = buildClientAuthenticator(configs, id, socket.getInetAddress().getHostName(),
                         loginManager.serviceName(), transportLayer, loginManager.subject());
             }
-            return new KafkaChannel(id, transportLayer, authenticator, maxReceiveSize, memoryPool != null ? memoryPool : MemoryPool.NONE);
+            BrokerInterceptor interceptor = ConfluentConfigs.buildBrokerInterceptor(mode, configs);
+            return new KafkaChannel(id, transportLayer, authenticator, maxReceiveSize,
+                    memoryPool != null ? memoryPool : MemoryPool.NONE, interceptor);
         } catch (Exception e) {
             log.info("Failed to create channel due to ", e);
             throw new KafkaException(e);
