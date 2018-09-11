@@ -67,9 +67,10 @@ public class TimestampRouter<R extends ConnectRecord<R>> implements Transformati
 
     @Override
     public R apply(R record) {
-        final Long timestamp = record.timestamp();
+        Long timestamp = record.timestamp();
         if (timestamp == null) {
-            throw new DataException("Timestamp missing on record: " + record);
+            timestamp = System.currentTimeMillis();
+            // throw new DataException("Timestamp missing on record: " + record);
         }
         final String formattedTimestamp = timestampFormat.get().format(new Date(timestamp));
         final String updatedTopic = topicFormat.replace("${topic}", record.topic()).replace("${timestamp}", formattedTimestamp);
